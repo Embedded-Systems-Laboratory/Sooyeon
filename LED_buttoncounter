@@ -1,0 +1,65 @@
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <avr/interrupt.h> // 외부 인터럽트 헤더
+#include <util/delay.h>
+
+// FND 숫자 모양 데이터 (0~9)
+unsigned char digit[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7c, 0x07, 0x7f, 0x67};
+// FND 자리 선택 데이터 (1~4번째 칸)
+unsigned char fnd_sel[4] = {0x01, 0x02, 0x04, 0x08};
+
+volatile int count = 0; // 인터럽트에서 수정되는 변수
+
+// 외부 인터럽트 4번(INT4) 서비스 루틴: 버튼(SW1)을 누를 때 실행됨
+ISR(INT4_vect)
+{
+	PORTG=0x00;
+	PORTC=0x00; //버튼 눌렸을 때 FND 클리어
+	
+	_delay_ms(50);
+	
+	//버튼이 눌려 있는지 확인
+	if (!(PINE & 0x10))
+	{
+		count++; 
+	}
+	
+	//버튼을 뗄 때까지 대기
+	while(!(PINE & 0x10));
+	_delay_ms(50);
+}
+
+// FND에 숫자를 뿌려주는 함수
+void display_fnd(int n)
+{
+	int fnd[4];
+	fnd[3] = (n / 1000) % 10; // 천의 자리
+	fnd[2] = (n / 100) % 10;  // 백의 자리
+	fnd[1] = (n / 10) % 10;   // 십의 자리
+	fnd[0] = n % 10;          // 일의 자리
+
+	for (int i = 0; i < 4; i++)
+	{
+		PORTC = digit[fnd[i]]; // FND 숫자 데이터 출력 레지스터
+		PORTG = fnd_sel[i];    // FND 자리 선택 출력 레지스터
+		_delay_ms(2);          
+	}
+}
+
+int main(void)
+{
+	//입출력 방향 설정
+	DDRC = 0xFF; // PORTC를 모두 출력으로 설정
+	DDRG = 0x0F; // PORTG 하위 4핀 출력 설정 (FND 자리 선택용)
+	DDRE = 0xEF; // PE4(SW1)는 입력(0), 나머지는 출력으로 설정
+
+	// 2. 외부 인터럽트 설정
+	EICRB = 0x02; // INT4의 트리거 방식 설정: Falling Edge(누르는 순간) 
+	EIMSK = 0x10; // 외부 인터럽트 4번(INT4)을 개별적으로 활성화
+	SREG |= (1 << 7); // 전역 인터럽트 허용 (I-bit를 1로 세팅, sei()와 동일)
+
+	while (1)
+	{
+		display_fnd(count); // 무한 루프 돌며 현재 count 값을 FND에 표시
+	}
+}
