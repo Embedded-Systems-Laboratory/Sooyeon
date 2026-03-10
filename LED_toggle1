@@ -5,7 +5,7 @@
 
 ISR(INT4_vect)
 {
-	if (!(PINE & 0x10))
+	if ((PINE & 0x10 == 0x00))
 	{
 		PORTA=~PORTA;
 		_delay_ms(200);
