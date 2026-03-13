@@ -1,0 +1,29 @@
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
+ISR(INT4_vect)
+{
+	PORTA=0xff;
+	_delay_ms(1);
+}
+ISR(INT5_vect)
+{
+	PORTA=0x00;
+	_delay_ms(1);
+}
+
+int main(void)
+{
+    /* LED control with interrupt */
+	DDRA=0xff;
+	DDRE=0x00;
+	
+	EICRB=0x0a; //int4, int5의 트리거를 하강에지로 설정
+	EIMSK=0x30; //외부 인터럽트 중 int4, 5의 개별 인터럽트 허용
+	sei();
+	
+    while (1) 
+    {
+    }
+}
