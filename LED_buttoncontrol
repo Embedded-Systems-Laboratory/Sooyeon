@@ -1,0 +1,23 @@
+#include <avr/io.h>
+
+
+int main(void)
+{
+    /* LED_button control */
+    DDRA=0xff; PORTA=0x00;
+	DDRE=0x00; //button input
+	
+	PORTE=0x01;
+	
+	while (1) 
+    {
+		if ( !(PINE & 0x10) || !(PINE & 0x20) ) //둘 중 하나, 눌렀을 때 켜지도록 (초기: 0(눌림))
+		{
+			PORTA=0xff;
+		}
+		else 
+		{
+			PORTA=0x00;
+		}
+    }
+}

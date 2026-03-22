@@ -1,0 +1,31 @@
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
+ISR(INT4_vect)
+{
+	if ((PINE & 0x10 == 0x00))
+	{
+		PORTA=~PORTA;
+		_delay_ms(200);
+	}
+}
+
+int main(void)
+{
+    /* LED toggle 1 */
+
+	DDRA=0xff;
+	DDRE=0x00; //스위치
+	PORTE=0x10; //풀업 저항 활성화
+	
+	EICRB=0x01;
+	EIMSK=0x10;
+	sei();
+	
+	while (1)
+	{
+		
+	}
+}
